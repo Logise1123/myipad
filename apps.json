@@ -1,8 +1,8 @@
 [
   {
-    name: "Notas",
-    description: "Una app simple y elegante para tomar notas.",
-    content: `
+    "name": "Notas",
+    "description": "Una app simple y elegante para tomar notas.",
+    "content": `
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -53,62 +53,62 @@
     </div>
 
     <script>
-        const notesListContainer = document.getElementById('notes-list-container');
-        const noteContent = document.getElementById('note-content');
-        const newNoteBtn = document.getElementById('new-note-btn');
-        const deleteNoteBtn = document.getElementById('delete-note-btn');
+        const notesListContainer = document.getElementById('notes-list-container')
+        const noteContent = document.getElementById('note-content')
+        const newNoteBtn = document.getElementById('new-note-btn')
+        const deleteNoteBtn = document.getElementById('delete-note-btn')
 
-        let notes = [];
-        let activeNoteId = null;
+        let notes = []
+        let activeNoteId = null
 
         // Cargar notas desde localStorage
         function loadNotes() {
-            const savedNotes = localStorage.getItem('notes-app-data');
+            const savedNotes = localStorage.getItem('notes-app-data')
             if (savedNotes) {
-                notes = JSON.parse(savedNotes);
+                notes = JSON.parse(savedNotes)
             }
-            renderNotesList();
+            renderNotesList()
         }
 
         // Guardar notas en localStorage
         function saveNotes() {
-            localStorage.setItem('notes-app-data', JSON.stringify(notes));
+            localStorage.setItem('notes-app-data', JSON.stringify(notes))
         }
 
         // Renderizar la lista de notas
         function renderNotesList() {
-            notesListContainer.innerHTML = '';
+            notesListContainer.innerHTML = ''
             if (notes.length === 0) {
-                notesListContainer.innerHTML = '<p class="text-center text-gray-500 p-4">No hay notas.</p>';
+                notesListContainer.innerHTML = '<p class="text-center text-gray-500 p-4">No hay notas.</p>'
             } else {
                 notes.forEach(note => {
-                    const noteElement = document.createElement('div');
-                    noteElement.className = \`note-item p-3 rounded-lg hover:bg-gray-200 cursor-pointer mt-1 \${note.id === activeNoteId ? 'active' : ''}\`;
-                    noteElement.dataset.id = note.id;
+                    const noteElement = document.createElement('div')
+                    noteElement.className = \`note-item p-3 rounded-lg hover:bg-gray-200 cursor-pointer mt-1 \${note.id === activeNoteId ? 'active' : ''}\`
+                    noteElement.dataset.id = note.id
                     
-                    const title = note.content.split('\\n')[0] || 'Nueva Nota';
-                    const preview = note.content.substring(title.length).trim().split('\\n')[0] || 'Sin contenido adicional';
+                    const title = note.content.split('\\n')[0] || 'Nueva Nota'
+                    const preview = note.content.substring(title.length).trim().split('\\n')[0] || 'Sin contenido adicional'
 
                     noteElement.innerHTML = \`
                         <h2 class="font-semibold text-gray-900 truncate">\${title}</h2>
                         <p class="text-sm text-gray-600 truncate">\${preview}</p>
-                    \`;
-                    noteElement.addEventListener('click', () => selectNote(note.id));
-                    notesListContainer.appendChild(noteElement);
-                });
+                    \`
+                    noteElement.addEventListener('click', () => selectNote(note.id))
+                    notesListContainer.appendChild(noteElement)
+                })
             }
         }
 
         // Seleccionar una nota
         function selectNote(id) {
-            activeNoteId = id;
-            const activeNote = notes.find(note => note.id === id);
+            activeNoteId = id
+            const activeNote = notes.find(note => note.id === id)
             if (activeNote) {
-                noteContent.value = activeNote.content;
-                noteContent.disabled = false;
-                deleteNoteBtn.disabled = false;
+                noteContent.value = activeNote.content
+                noteContent.disabled = false
+                deleteNoteBtn.disabled = false
             }
-            renderNotesList();
+            renderNotesList()
         }
 
         // Crear una nueva nota
@@ -116,53 +116,53 @@
             const newNote = {
                 id: Date.now().toString(),
                 content: ''
-            };
-            notes.unshift(newNote);
-            activeNoteId = newNote.id;
-            saveNotes();
-            renderNotesList();
-            noteContent.value = '';
-            noteContent.disabled = false;
-            noteContent.focus();
-            deleteNoteBtn.disabled = false;
-        });
+            }
+            notes.unshift(newNote)
+            activeNoteId = newNote.id
+            saveNotes()
+            renderNotesList()
+            noteContent.value = ''
+            noteContent.disabled = false
+            noteContent.focus()
+            deleteNoteBtn.disabled = false
+        })
         
         // Eliminar una nota
         deleteNoteBtn.addEventListener('click', () => {
-            if (!activeNoteId) return;
-            notes = notes.filter(note => note.id !== activeNoteId);
-            activeNoteId = null;
-            noteContent.value = '';
-            noteContent.disabled = true;
-            deleteNoteBtn.disabled = true;
-            saveNotes();
-            renderNotesList();
-        });
+            if (!activeNoteId) return
+            notes = notes.filter(note => note.id !== activeNoteId)
+            activeNoteId = null
+            noteContent.value = ''
+            noteContent.disabled = true
+            deleteNoteBtn.disabled = true
+            saveNotes()
+            renderNotesList()
+        })
 
         // Guardar contenido de la nota al escribir
         noteContent.addEventListener('input', () => {
-            if (!activeNoteId) return;
-            const activeNote = notes.find(note => note.id === activeNoteId);
+            if (!activeNoteId) return
+            const activeNote = notes.find(note => note.id === activeNoteId)
             if (activeNote) {
-                activeNote.content = noteContent.value;
-                saveNotes();
+                activeNote.content = noteContent.value
+                saveNotes()
                 // Re-render para actualizar el título/preview en tiempo real
-                renderNotesList();
+                renderNotesList()
             }
-        });
+        })
 
         // Carga inicial
-        loadNotes();
-        noteContent.disabled = true;
+        loadNotes()
+        noteContent.disabled = true
     </script>
 </body>
 </html>
 `
   },
   {
-    name: "Clima",
-    description: "Consulta el tiempo en tu ubicación actual.",
-    content: `
+    "name": "Clima",
+    "description": "Consulta el tiempo en tu ubicación actual.",
+    "content": `
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -197,66 +197,89 @@
     </div>
 
     <script>
-        const weatherContainer = document.getElementById('weather-container');
-        const loadingContainer = document.getElementById('loading-container');
-        const loadingMessage = document.getElementById('loading-message');
+        const weatherContainer = document.getElementById('weather-container')
+        const loadingContainer = document.getElementById('loading-container')
+        const loadingMessage = document.getElementById('loading-message')
         
-        // IMPORTANTE: Reemplaza '' con tu propia API key de OpenWeatherMap
-        // Puedes obtener una gratis en https://openweathermap.org/
-        const API_KEY = '';
-
         window.addEventListener('load', () => {
-            if (!API_KEY) {
-                showError('Falta la API Key de OpenWeatherMap en el código.');
-                return;
-            }
-            
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(onSuccess, onError);
+                navigator.geolocation.getCurrentPosition(onSuccess, onError)
             } else {
-                showError("La geolocalización no es soportada por este navegador.");
+                showError("La geolocalización no es soportada por este navegador.")
             }
-        });
+        })
 
-        function onSuccess(position) {
-            const { latitude, longitude } = position.coords;
-            loadingMessage.textContent = 'Cargando datos del clima...';
+        async function onSuccess(position) {
+            const { latitude, longitude } = position.coords
+            loadingMessage.textContent = 'Cargando datos del clima...'
             
-            const API_URL = \`https://api.openweathermap.org/data/2.5/weather?lat=\${latitude}&lon=\${longitude}&appid=\${API_KEY}&units=metric&lang=es\`;
+            const weatherApiUrl = \`https://api.open-meteo.com/v1/forecast?latitude=\${latitude}&longitude=\${longitude}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&timezone=auto\`
+            const geoApiUrl = \`https://nominatim.openstreetmap.org/reverse?format=json&lat=\${latitude}&lon=\${longitude}\`
 
-            fetch(API_URL)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.cod === 200) {
-                        displayWeatherData(data);
-                    } else {
-                        showError(data.message);
-                    }
-                })
-                .catch(() => {
-                    showError("No se pudieron obtener los datos del clima.");
-                });
+            try {
+                const [weatherResponse, geoResponse] = await Promise.all([
+                    fetch(weatherApiUrl),
+                    fetch(geoApiUrl)
+                ])
+
+                if (!weatherResponse.ok || !geoResponse.ok) {
+                    throw new Error('Error al obtener los datos.')
+                }
+
+                const weatherData = await weatherResponse.json()
+                const geoData = await geoResponse.json()
+                
+                displayWeatherData(weatherData, geoData)
+
+            } catch (error) {
+                console.error(error)
+                showError("No se pudieron obtener los datos del clima.")
+            }
         }
 
         function onError() {
-            showError("No se pudo acceder a tu ubicación. Por favor, permite el acceso a la ubicación y recarga.");
+            showError("No se pudo acceder a tu ubicación. Por favor, permite el acceso a la ubicación y recarga.")
         }
         
         function showError(message) {
-            loadingMessage.textContent = message;
-            loadingMessage.classList.add('text-red-300');
-            weatherContainer.classList.add('hidden');
-            loadingContainer.classList.remove('hidden');
+            loadingMessage.textContent = message
+            loadingMessage.classList.add('text-red-300')
+            weatherContainer.classList.add('hidden')
+            loadingContainer.classList.remove('hidden')
         }
 
-        function displayWeatherData(data) {
-            document.getElementById('city').textContent = data.name;
-            document.getElementById('temperature').textContent = \`\${Math.round(data.main.temp)}°\`;
-            document.getElementById('description').textContent = data.weather[0].description.charAt(0).toUpperCase() + data.weather[0].description.slice(1);
-            document.getElementById('temp-range').textContent = \`Máx: \${Math.round(data.main.temp_max)}° Mín: \${Math.round(data.main.temp_min)}°\`;
+        function getWeatherDescription(code) {
+            const descriptions = {
+                0: 'Cielo despejado',
+                1: 'Principalmente despejado',
+                2: 'Parcialmente nublado',
+                3: 'Nublado',
+                45: 'Niebla',
+                48: 'Niebla con escarcha',
+                51: 'Llovizna ligera',
+                53: 'Llovizna moderada',
+                55: 'Llovizna densa',
+                61: 'Lluvia ligera',
+                63: 'Lluvia moderada',
+                65: 'Lluvia fuerte',
+                80: 'Chubascos ligeros',
+                81: 'Chubascos moderados',
+                82: 'Chubascos violentos',
+                95: 'Tormenta eléctrica'
+            }
+            return descriptions[code] || 'Condición desconocida'
+        }
 
-            loadingContainer.classList.add('hidden');
-            weatherContainer.classList.remove('hidden');
+        function displayWeatherData(weather, geo) {
+            const city = geo.address.city || geo.address.town || geo.address.village || 'Ubicación desconocida'
+            
+            document.getElementById('city').textContent = city
+            document.getElementById('temperature').textContent = \`\${Math.round(weather.current_weather.temperature)}°\`
+            document.getElementById('description').textContent = getWeatherDescription(weather.current_weather.weathercode)
+            document.getElementById('temp-range').textContent = \`Máx: \${Math.round(weather.daily.temperature_2m_max[0])}° Mín: \${Math.round(weather.daily.temperature_2m_min[0])}°\`
+
+            loadingContainer.classList.add('hidden')
+            weatherContainer.classList.remove('hidden')
         }
     </script>
 </body>
@@ -264,9 +287,9 @@
 `
   },
   {
-    name: "Calculadora",
-    description: "Una calculadora para operaciones básicas y científicas.",
-    content: `
+    "name": "Calculadora",
+    "description": "Una calculadora para operaciones básicas y científicas.",
+    "content": `
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -321,105 +344,105 @@
         </div>
     </div>
     <script>
-    const display = document.getElementById('display');
-    const buttons = document.querySelector('.grid');
+    const display = document.getElementById('display')
+    const buttons = document.querySelector('.grid')
 
-    let displayValue = '0';
-    let firstOperand = null;
-    let operator = null;
-    let waitingForSecondOperand = false;
+    let displayValue = '0'
+    let firstOperand = null
+    let operator = null
+    let waitingForSecondOperand = false
 
     function updateDisplay() {
-        display.textContent = displayValue.replace('.', ',');
+        display.textContent = displayValue.replace('.', ',')
         if (displayValue.length > 9) {
-            display.style.fontSize = '4rem';
+            display.style.fontSize = '4rem'
         } else {
-            display.style.fontSize = '5rem';
+            display.style.fontSize = '5rem'
         }
     }
 
     buttons.addEventListener('click', (event) => {
-        const { target } = event;
-        if (!target.matches('button')) return;
+        const { target } = event
+        if (!target.matches('button')) return
 
-        const { action, value } = target.dataset;
+        const { action, value } = target.dataset
 
         switch (action) {
             case 'number':
                 if (waitingForSecondOperand) {
-                    displayValue = value;
-                    waitingForSecondOperand = false;
+                    displayValue = value
+                    waitingForSecondOperand = false
                 } else {
-                    displayValue = displayValue === '0' ? value : displayValue + value;
+                    displayValue = displayValue === '0' ? value : displayValue + value
                 }
-                break;
+                break
             case 'decimal':
                 if (!displayValue.includes('.')) {
-                    displayValue += '.';
+                    displayValue += '.'
                 }
-                break;
+                break
             case 'operator':
-                handleOperator(value);
-                break;
+                handleOperator(value)
+                break
             case 'calculate':
                 if (operator && firstOperand !== null) {
-                    const result = calculate(firstOperand, parseFloat(displayValue), operator);
-                    displayValue = String(result);
-                    firstOperand = null;
-                    operator = null;
+                    const result = calculate(firstOperand, parseFloat(displayValue), operator)
+                    displayValue = String(result)
+                    firstOperand = null
+                    operator = null
                 }
-                break;
+                break
             case 'clear':
-                displayValue = '0';
-                firstOperand = null;
-                operator = null;
-                waitingForSecondOperand = false;
-                break;
+                displayValue = '0'
+                firstOperand = null
+                operator = null
+                waitingForSecondOperand = false
+                break
             case 'negate':
-                displayValue = String(parseFloat(displayValue) * -1);
-                break;
+                displayValue = String(parseFloat(displayValue) * -1)
+                break
             case 'percentage':
-                displayValue = String(parseFloat(displayValue) / 100);
-                break;
+                displayValue = String(parseFloat(displayValue) / 100)
+                break
         }
-        updateDisplay();
-    });
+        updateDisplay()
+    })
 
     function handleOperator(nextOperator) {
-        const inputValue = parseFloat(displayValue);
+        const inputValue = parseFloat(displayValue)
         if (operator && waitingForSecondOperand) {
-            operator = nextOperator;
-            return;
+            operator = nextOperator
+            return
         }
         if (firstOperand === null) {
-            firstOperand = inputValue;
+            firstOperand = inputValue
         } else if (operator) {
-            const result = calculate(firstOperand, inputValue, operator);
-            displayValue = String(result);
-            firstOperand = result;
+            const result = calculate(firstOperand, inputValue, operator)
+            displayValue = String(result)
+            firstOperand = result
         }
-        waitingForSecondOperand = true;
-        operator = nextOperator;
+        waitingForSecondOperand = true
+        operator = nextOperator
     }
     
     function calculate(first, second, op) {
-        if (op === 'add') return first + second;
-        if (op === 'subtract') return first - second;
-        if (op === 'multiply') return first * second;
-        if (op === 'divide') return first / second;
-        return second;
+        if (op === 'add') return first + second
+        if (op === 'subtract') return first - second
+        if (op === 'multiply') return first * second
+        if (op === 'divide') return first / second
+        return second
     }
 
-    updateDisplay();
+    updateDisplay()
     </script>
 </body>
 </html>
 `
   },
   {
-    name: "Fotos",
-    description: "Explora y revive tus recuerdos.",
-    content: `
+    "name": "Fotos",
+    "description": "Explora y revive tus recuerdos.",
+    "content": `
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -478,82 +501,82 @@
     </div>
 
     <script>
-    const openCameraBtn = document.getElementById('open-camera-btn');
-    const closeCameraBtn = document.getElementById('close-camera-btn');
-    const captureBtn = document.getElementById('capture-btn');
-    const cameraModal = document.getElementById('camera-modal');
-    const cameraFeed = document.getElementById('camera-feed');
-    const photoCanvas = document.getElementById('photo-canvas');
-    const cameraError = document.getElementById('camera-error');
-    const gallery = document.getElementById('gallery');
-    const noPhotosMsg = document.getElementById('no-photos-msg');
-    let stream = null;
+    const openCameraBtn = document.getElementById('open-camera-btn')
+    const closeCameraBtn = document.getElementById('close-camera-btn')
+    const captureBtn = document.getElementById('capture-btn')
+    const cameraModal = document.getElementById('camera-modal')
+    const cameraFeed = document.getElementById('camera-feed')
+    const photoCanvas = document.getElementById('photo-canvas')
+    const cameraError = document.getElementById('camera-error')
+    const gallery = document.getElementById('gallery')
+    const noPhotosMsg = document.getElementById('no-photos-msg')
+    let stream = null
 
-    const STORAGE_KEY = 'photos-app-gallery';
+    const STORAGE_KEY = 'photos-app-gallery'
 
     // Cargar fotos desde localStorage
     function loadPhotos() {
-        const photos = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        gallery.innerHTML = '';
+        const photos = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+        gallery.innerHTML = ''
         if (photos.length > 0) {
-            noPhotosMsg.classList.add('hidden');
+            noPhotosMsg.classList.add('hidden')
             photos.forEach(photoDataUrl => {
-                const img = document.createElement('img');
-                img.src = photoDataUrl;
-                img.className = "rounded-lg aspect-square object-cover cursor-pointer hover:opacity-90 transition-opacity";
-                gallery.appendChild(img);
-            });
+                const img = document.createElement('img')
+                img.src = photoDataUrl
+                img.className = "rounded-lg aspect-square object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                gallery.appendChild(img)
+            })
         } else {
-            noPhotosMsg.classList.remove('hidden');
+            noPhotosMsg.classList.remove('hidden')
         }
     }
 
     // Guardar una foto
     function savePhoto(dataUrl) {
-        const photos = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        photos.unshift(dataUrl); // Añadir al principio
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(photos));
-        loadPhotos();
+        const photos = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+        photos.unshift(dataUrl) // Añadir al principio
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(photos))
+        loadPhotos()
     }
     
     // Abrir la cámara
     async function startCamera() {
         try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-            cameraFeed.srcObject = stream;
-            cameraModal.classList.remove('hidden');
-            cameraError.classList.add('hidden');
+            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            cameraFeed.srcObject = stream
+            cameraModal.classList.remove('hidden')
+            cameraError.classList.add('hidden')
         } catch (err) {
-            console.error("Error al acceder a la cámara: ", err);
-            cameraError.classList.remove('hidden');
+            console.error("Error al acceder a la cámara: ", err)
+            cameraError.classList.remove('hidden')
         }
     }
 
     // Cerrar la cámara
     function stopCamera() {
         if (stream) {
-            stream.getTracks().forEach(track => track.stop());
+            stream.getTracks().forEach(track => track.stop())
         }
-        cameraModal.classList.add('hidden');
+        cameraModal.classList.add('hidden')
     }
 
     // Capturar foto
     captureBtn.addEventListener('click', () => {
-        const context = photoCanvas.getContext('2d');
-        photoCanvas.width = cameraFeed.videoWidth;
-        photoCanvas.height = cameraFeed.videoHeight;
-        context.drawImage(cameraFeed, 0, 0, photoCanvas.width, photoCanvas.height);
+        const context = photoCanvas.getContext('2d')
+        photoCanvas.width = cameraFeed.videoWidth
+        photoCanvas.height = cameraFeed.videoHeight
+        context.drawImage(cameraFeed, 0, 0, photoCanvas.width, photoCanvas.height)
         
-        const dataUrl = photoCanvas.toDataURL('image/png');
-        savePhoto(dataUrl);
-        stopCamera();
-    });
+        const dataUrl = photoCanvas.toDataURL('image/png')
+        savePhoto(dataUrl)
+        stopCamera()
+    })
 
-    openCameraBtn.addEventListener('click', startCamera);
-    closeCameraBtn.addEventListener('click', stopCamera);
+    openCameraBtn.addEventListener('click', startCamera)
+    closeCameraBtn.addEventListener('click', stopCamera)
 
     // Carga inicial de fotos
-    loadPhotos();
+    loadPhotos()
     </script>
 </body>
 </html>
