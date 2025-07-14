@@ -1,4 +1,4 @@
-const apps = [
+[
   {
     name: "Notas",
     description: "Una app simple y elegante para tomar notas.",
@@ -19,40 +19,142 @@ const apps = [
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
+        .note-item.active {
+            background-color: #fef08a; /* yellow-200 */
+        }
     </style>
 </head>
 <body class="bg-gray-100">
     <div class="flex h-screen">
         <!-- Sidebar de Notas -->
-        <aside class="w-1/3 max-w-xs bg-white border-r border-gray-200">
-            <div class="p-4 border-b border-gray-200">
+        <aside class="w-1/3 max-w-xs bg-white border-r border-gray-200 flex flex-col">
+            <div class="p-4 border-b border-gray-200 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-gray-800">Notas</h1>
+                <button id="new-note-btn" class="text-gray-600 hover:text-blue-500">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                </button>
             </div>
-            <div class="p-2">
-                <ul>
-                    <li class="p-3 rounded-lg bg-yellow-200 cursor-pointer">
-                        <h2 class="font-semibold text-gray-900">Idea para el proyecto</h2>
-                        <p class="text-sm text-gray-600 truncate">Desarrollar una app store para iPad...</p>
-                    </li>
-                    <li class="p-3 rounded-lg hover:bg-gray-200 cursor-pointer mt-1">
-                        <h2 class="font-semibold text-gray-900">Lista de la compra</h2>
-                        <p class="text-sm text-gray-600 truncate">Leche, huevos, pan, fruta...</p>
-                    </li>
-                    <li class="p-3 rounded-lg hover:bg-gray-200 cursor-pointer mt-1">
-                        <h2 class="font-semibold text-gray-900">Reunión Lunes</h2>
-                        <p class="text-sm text-gray-600 truncate">Preparar la presentación de resultados.</p>
-                    </li>
-                </ul>
+            <div id="notes-list-container" class="p-2 overflow-y-auto flex-1">
+                <!-- La lista de notas se generará aquí -->
+            </div>
+             <div class="p-2 border-t border-gray-200">
+                <button id="delete-note-btn" class="w-full text-red-500 hover:text-red-700 font-semibold py-2 px-4 rounded-lg text-sm text-center disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    Eliminar Nota
+                </button>
             </div>
         </aside>
 
         <!-- Contenido de la Nota -->
         <main class="flex-1 p-6">
             <div class="w-full h-full">
-                <textarea class="w-full h-full p-4 text-lg bg-transparent focus:outline-none resize-none text-gray-800" placeholder="Selecciona o crea una nota...">Desarrollar una app store para iPad usando HTML y Tailwind CSS. Cada app será un objeto en un array de JavaScript. La estética debe ser similar a la de Apple, con fuentes limpias, esquinas redondeadas y una paleta de colores minimalista.</textarea>
+                <textarea id="note-content" class="w-full h-full p-4 text-lg bg-transparent focus:outline-none resize-none text-gray-800" placeholder="Crea una nueva nota o selecciona una existente."></textarea>
             </div>
         </main>
     </div>
+
+    <script>
+        const notesListContainer = document.getElementById('notes-list-container');
+        const noteContent = document.getElementById('note-content');
+        const newNoteBtn = document.getElementById('new-note-btn');
+        const deleteNoteBtn = document.getElementById('delete-note-btn');
+
+        let notes = [];
+        let activeNoteId = null;
+
+        // Cargar notas desde localStorage
+        function loadNotes() {
+            const savedNotes = localStorage.getItem('notes-app-data');
+            if (savedNotes) {
+                notes = JSON.parse(savedNotes);
+            }
+            renderNotesList();
+        }
+
+        // Guardar notas en localStorage
+        function saveNotes() {
+            localStorage.setItem('notes-app-data', JSON.stringify(notes));
+        }
+
+        // Renderizar la lista de notas
+        function renderNotesList() {
+            notesListContainer.innerHTML = '';
+            if (notes.length === 0) {
+                notesListContainer.innerHTML = '<p class="text-center text-gray-500 p-4">No hay notas.</p>';
+            } else {
+                notes.forEach(note => {
+                    const noteElement = document.createElement('div');
+                    noteElement.className = \`note-item p-3 rounded-lg hover:bg-gray-200 cursor-pointer mt-1 \${note.id === activeNoteId ? 'active' : ''}\`;
+                    noteElement.dataset.id = note.id;
+                    
+                    const title = note.content.split('\\n')[0] || 'Nueva Nota';
+                    const preview = note.content.substring(title.length).trim().split('\\n')[0] || 'Sin contenido adicional';
+
+                    noteElement.innerHTML = \`
+                        <h2 class="font-semibold text-gray-900 truncate">\${title}</h2>
+                        <p class="text-sm text-gray-600 truncate">\${preview}</p>
+                    \`;
+                    noteElement.addEventListener('click', () => selectNote(note.id));
+                    notesListContainer.appendChild(noteElement);
+                });
+            }
+        }
+
+        // Seleccionar una nota
+        function selectNote(id) {
+            activeNoteId = id;
+            const activeNote = notes.find(note => note.id === id);
+            if (activeNote) {
+                noteContent.value = activeNote.content;
+                noteContent.disabled = false;
+                deleteNoteBtn.disabled = false;
+            }
+            renderNotesList();
+        }
+
+        // Crear una nueva nota
+        newNoteBtn.addEventListener('click', () => {
+            const newNote = {
+                id: Date.now().toString(),
+                content: ''
+            };
+            notes.unshift(newNote);
+            activeNoteId = newNote.id;
+            saveNotes();
+            renderNotesList();
+            noteContent.value = '';
+            noteContent.disabled = false;
+            noteContent.focus();
+            deleteNoteBtn.disabled = false;
+        });
+        
+        // Eliminar una nota
+        deleteNoteBtn.addEventListener('click', () => {
+            if (!activeNoteId) return;
+            notes = notes.filter(note => note.id !== activeNoteId);
+            activeNoteId = null;
+            noteContent.value = '';
+            noteContent.disabled = true;
+            deleteNoteBtn.disabled = true;
+            saveNotes();
+            renderNotesList();
+        });
+
+        // Guardar contenido de la nota al escribir
+        noteContent.addEventListener('input', () => {
+            if (!activeNoteId) return;
+            const activeNote = notes.find(note => note.id === activeNoteId);
+            if (activeNote) {
+                activeNote.content = noteContent.value;
+                saveNotes();
+                // Re-render para actualizar el título/preview en tiempo real
+                renderNotesList();
+            }
+        });
+
+        // Carga inicial
+        loadNotes();
+        noteContent.disabled = true;
+    </script>
 </body>
 </html>
 `
@@ -76,51 +178,87 @@ const apps = [
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background: linear-gradient(to bottom, #6DD5FA, #2980B9);
         }
-        .text-shadow {
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
+        .text-shadow { text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .hidden { display: none; }
     </style>
 </head>
-<body class="text-white flex items-center justify-center h-screen">
-    <div class="w-full max-w-4xl p-8 rounded-2xl bg-white/20 backdrop-blur-lg">
+<body class="text-white flex items-center justify-center h-screen p-4">
+    <div id="weather-container" class="w-full max-w-4xl p-8 rounded-2xl bg-white/20 backdrop-blur-lg hidden">
         <!-- Cabecera -->
         <div class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-shadow">Madrid</h1>
-            <p class="text-8xl font-thin tracking-tighter text-shadow">24°</p>
-            <p class="text-xl opacity-90 text-shadow">Mayormente Soleado</p>
-            <p class="text-lg opacity-80 text-shadow">Máx: 28° Mín: 15°</p>
-        </div>
-
-        <!-- Pronóstico por Hora -->
-        <div class="border-t border-white/30 pt-6 mb-8">
-            <div class="flex justify-between text-center">
-                <!-- Hora -->
-                <div class="flex flex-col items-center">
-                    <span class="text-sm font-medium">Ahora</span>
-                    <svg class="w-8 h-8 my-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                    <span class="text-xl font-semibold">24°</span>
-                </div>
-                <!-- Hora -->
-                <div class="flex flex-col items-center opacity-80">
-                    <span class="text-sm font-medium">15:00</span>
-                    <svg class="w-8 h-8 my-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                    <span class="text-xl font-semibold">27°</span>
-                </div>
-                <!-- Hora -->
-                <div class="flex flex-col items-center opacity-80">
-                    <span class="text-sm font-medium">16:00</span>
-                    <svg class="w-8 h-8 my-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
-                    <span class="text-xl font-semibold">26°</span>
-                </div>
-                <!-- Hora -->
-                <div class="flex flex-col items-center opacity-80">
-                    <span class="text-sm font-medium">17:00</span>
-                    <svg class="w-8 h-8 my-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
-                    <span class="text-xl font-semibold">25°</span>
-                </div>
-            </div>
+            <h1 id="city" class="text-4xl font-bold text-shadow">--</h1>
+            <p id="temperature" class="text-8xl font-thin tracking-tighter text-shadow">-°</p>
+            <p id="description" class="text-xl opacity-90 text-shadow">--</p>
+            <p id="temp-range" class="text-lg opacity-80 text-shadow">Máx: -° Mín: -°</p>
         </div>
     </div>
+    <div id="loading-container" class="text-center">
+        <h2 id="loading-message" class="text-2xl font-semibold">Obteniendo tu ubicación...</h2>
+    </div>
+
+    <script>
+        const weatherContainer = document.getElementById('weather-container');
+        const loadingContainer = document.getElementById('loading-container');
+        const loadingMessage = document.getElementById('loading-message');
+        
+        // IMPORTANTE: Reemplaza '' con tu propia API key de OpenWeatherMap
+        // Puedes obtener una gratis en https://openweathermap.org/
+        const API_KEY = '';
+
+        window.addEventListener('load', () => {
+            if (!API_KEY) {
+                showError('Falta la API Key de OpenWeatherMap en el código.');
+                return;
+            }
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(onSuccess, onError);
+            } else {
+                showError("La geolocalización no es soportada por este navegador.");
+            }
+        });
+
+        function onSuccess(position) {
+            const { latitude, longitude } = position.coords;
+            loadingMessage.textContent = 'Cargando datos del clima...';
+            
+            const API_URL = \`https://api.openweathermap.org/data/2.5/weather?lat=\${latitude}&lon=\${longitude}&appid=\${API_KEY}&units=metric&lang=es\`;
+
+            fetch(API_URL)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.cod === 200) {
+                        displayWeatherData(data);
+                    } else {
+                        showError(data.message);
+                    }
+                })
+                .catch(() => {
+                    showError("No se pudieron obtener los datos del clima.");
+                });
+        }
+
+        function onError() {
+            showError("No se pudo acceder a tu ubicación. Por favor, permite el acceso a la ubicación y recarga.");
+        }
+        
+        function showError(message) {
+            loadingMessage.textContent = message;
+            loadingMessage.classList.add('text-red-300');
+            weatherContainer.classList.add('hidden');
+            loadingContainer.classList.remove('hidden');
+        }
+
+        function displayWeatherData(data) {
+            document.getElementById('city').textContent = data.name;
+            document.getElementById('temperature').textContent = \`\${Math.round(data.main.temp)}°\`;
+            document.getElementById('description').textContent = data.weather[0].description.charAt(0).toUpperCase() + data.weather[0].description.slice(1);
+            document.getElementById('temp-range').textContent = \`Máx: \${Math.round(data.main.temp_max)}° Mín: \${Math.round(data.main.temp_min)}°\`;
+
+            loadingContainer.classList.add('hidden');
+            weatherContainer.classList.remove('hidden');
+        }
+    </script>
 </body>
 </html>
 `
@@ -138,62 +276,142 @@ const apps = [
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
         .calc-btn {
-            @apply bg-gray-700 text-white text-3xl font-medium rounded-full flex items-center justify-center aspect-square transition-colors duration-150;
+            @apply bg-gray-700 text-white text-3xl font-medium rounded-full flex items-center justify-center aspect-square transition-colors duration-150 select-none;
         }
-        .calc-btn:active {
-            @apply bg-gray-500;
-        }
-        .calc-btn.light {
-            @apply bg-gray-400 text-black;
-        }
-        .calc-btn.light:active {
-            @apply bg-gray-300;
-        }
-        .calc-btn.orange {
-            @apply bg-orange-500 text-white;
-        }
-        .calc-btn.orange:active {
-            @apply bg-orange-400;
-        }
+        .calc-btn:active { @apply bg-gray-500; }
+        .calc-btn.light { @apply bg-gray-400 text-black; }
+        .calc-btn.light:active { @apply bg-gray-300; }
+        .calc-btn.orange { @apply bg-orange-500 text-white; }
+        .calc-btn.orange:active { @apply bg-orange-400; }
     </style>
 </head>
 <body class="bg-black flex items-center justify-center h-screen">
     <div class="w-full max-w-sm p-4 space-y-4">
         <!-- Pantalla -->
-        <div class="text-right text-white text-8xl font-light pr-4 mb-4">
-            0
-        </div>
+        <div id="display" class="text-right text-white text-8xl font-light pr-4 mb-4 break-all">0</div>
         <!-- Botones -->
         <div class="grid grid-cols-4 gap-3">
-            <button class="calc-btn light">AC</button>
-            <button class="calc-btn light">+/-</button>
-            <button class="calc-btn light">%</button>
-            <button class="calc-btn orange">÷</button>
+            <button class="calc-btn light" data-action="clear">AC</button>
+            <button class="calc-btn light" data-action="negate">+/-</button>
+            <button class="calc-btn light" data-action="percentage">%</button>
+            <button class="calc-btn orange" data-action="operator" data-value="divide">÷</button>
 
-            <button class="calc-btn">7</button>
-            <button class="calc-btn">8</button>
-            <button class="calc-btn">9</button>
-            <button class="calc-btn orange">×</button>
+            <button class="calc-btn" data-action="number" data-value="7">7</button>
+            <button class="calc-btn" data-action="number" data-value="8">8</button>
+            <button class="calc-btn" data-action="number" data-value="9">9</button>
+            <button class="calc-btn orange" data-action="operator" data-value="multiply">×</button>
 
-            <button class="calc-btn">4</button>
-            <button class="calc-btn">5</button>
-            <button class="calc-btn">6</button>
-            <button class="calc-btn orange">-</button>
+            <button class="calc-btn" data-action="number" data-value="4">4</button>
+            <button class="calc-btn" data-action="number" data-value="5">5</button>
+            <button class="calc-btn" data-action="number" data-value="6">6</button>
+            <button class="calc-btn orange" data-action="operator" data-value="subtract">-</button>
 
-            <button class="calc-btn">1</button>
-            <button class="calc-btn">2</button>
-            <button class="calc-btn">3</button>
-            <button class="calc-btn orange">+</button>
+            <button class="calc-btn" data-action="number" data-value="1">1</button>
+            <button class="calc-btn" data-action="number" data-value="2">2</button>
+            <button class="calc-btn" data-action="number" data-value="3">3</button>
+            <button class="calc-btn orange" data-action="operator" data-value="add">+</button>
 
-            <button class="calc-btn col-span-2 text-left pl-8">0</button>
-            <button class="calc-btn">,</button>
-            <button class="calc-btn orange">=</button>
+            <button class="calc-btn col-span-2 text-left pl-8" data-action="number" data-value="0">0</button>
+            <button class="calc-btn" data-action="decimal">,</button>
+            <button class="calc-btn orange" data-action="calculate">=</button>
         </div>
     </div>
+    <script>
+    const display = document.getElementById('display');
+    const buttons = document.querySelector('.grid');
+
+    let displayValue = '0';
+    let firstOperand = null;
+    let operator = null;
+    let waitingForSecondOperand = false;
+
+    function updateDisplay() {
+        display.textContent = displayValue.replace('.', ',');
+        if (displayValue.length > 9) {
+            display.style.fontSize = '4rem';
+        } else {
+            display.style.fontSize = '5rem';
+        }
+    }
+
+    buttons.addEventListener('click', (event) => {
+        const { target } = event;
+        if (!target.matches('button')) return;
+
+        const { action, value } = target.dataset;
+
+        switch (action) {
+            case 'number':
+                if (waitingForSecondOperand) {
+                    displayValue = value;
+                    waitingForSecondOperand = false;
+                } else {
+                    displayValue = displayValue === '0' ? value : displayValue + value;
+                }
+                break;
+            case 'decimal':
+                if (!displayValue.includes('.')) {
+                    displayValue += '.';
+                }
+                break;
+            case 'operator':
+                handleOperator(value);
+                break;
+            case 'calculate':
+                if (operator && firstOperand !== null) {
+                    const result = calculate(firstOperand, parseFloat(displayValue), operator);
+                    displayValue = String(result);
+                    firstOperand = null;
+                    operator = null;
+                }
+                break;
+            case 'clear':
+                displayValue = '0';
+                firstOperand = null;
+                operator = null;
+                waitingForSecondOperand = false;
+                break;
+            case 'negate':
+                displayValue = String(parseFloat(displayValue) * -1);
+                break;
+            case 'percentage':
+                displayValue = String(parseFloat(displayValue) / 100);
+                break;
+        }
+        updateDisplay();
+    });
+
+    function handleOperator(nextOperator) {
+        const inputValue = parseFloat(displayValue);
+        if (operator && waitingForSecondOperand) {
+            operator = nextOperator;
+            return;
+        }
+        if (firstOperand === null) {
+            firstOperand = inputValue;
+        } else if (operator) {
+            const result = calculate(firstOperand, inputValue, operator);
+            displayValue = String(result);
+            firstOperand = result;
+        }
+        waitingForSecondOperand = true;
+        operator = nextOperator;
+    }
+    
+    function calculate(first, second, op) {
+        if (op === 'add') return first + second;
+        if (op === 'subtract') return first - second;
+        if (op === 'multiply') return first * second;
+        if (op === 'divide') return first / second;
+        return second;
+    }
+
+    updateDisplay();
+    </script>
 </body>
 </html>
 `
@@ -214,43 +432,129 @@ const apps = [
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        .hidden { display: none; }
     </style>
 </head>
 <body class="bg-white">
     <div class="w-full max-w-7xl mx-auto">
         <!-- Cabecera -->
-        <header class="py-4 px-6 border-b border-gray-200 sticky top-0 bg-white/80 backdrop-blur-sm z-10">
+        <header class="py-4 px-6 border-b border-gray-200 sticky top-0 bg-white/80 backdrop-blur-sm z-10 flex justify-between items-center">
             <h1 class="text-3xl font-bold text-gray-900">Fotos</h1>
+            <button id="open-camera-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">
+                Tomar Foto
+            </button>
         </header>
 
         <!-- Galería -->
         <main class="p-6">
-            <div class="mb-10">
-                <h2 class="text-xl font-semibold text-gray-800 mb-3">Recuerdos</h2>
-                <div class="relative rounded-lg overflow-hidden aspect-video">
-                    <img src="https://placehold.co/800x450/a7c7e7/ffffff?text=Viaje+a+la+Playa" alt="Recuerdo de un viaje a la playa" class="w-full h-full object-cover">
-                    <div class="absolute bottom-0 left-0 p-4 bg-gradient-to-t from-black/50 to-transparent w-full">
-                        <h3 class="text-white text-lg font-bold">Lo mejor del verano</h3>
-                        <p class="text-white/90 text-sm">Hace 1 año</p>
-                    </div>
-                </div>
-            </div>
-
             <div>
-                <h2 class="text-xl font-semibold text-gray-800 mb-3">Todas las fotos</h2>
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                    <img src="https://placehold.co/400x400/f2d7d5/ffffff?text=Foto+1" alt="Foto de galería" class="rounded-lg aspect-square object-cover cursor-pointer hover:opacity-90 transition-opacity">
-                    <img src="https://placehold.co/400x400/d4e6f1/ffffff?text=Foto+2" alt="Foto de galería" class="rounded-lg aspect-square object-cover cursor-pointer hover:opacity-90 transition-opacity">
-                    <img src="https://placehold.co/400x400/d1f2eb/ffffff?text=Foto+3" alt="Foto de galería" class="rounded-lg aspect-square object-cover cursor-pointer hover:opacity-90 transition-opacity">
-                    <img src="https://placehold.co/400x400/fdebd0/ffffff?text=Foto+4" alt="Foto de galería" class="rounded-lg aspect-square object-cover cursor-pointer hover:opacity-90 transition-opacity">
-                    <img src="https://placehold.co/400x400/ebdef0/ffffff?text=Foto+5" alt="Foto de galería" class="rounded-lg aspect-square object-cover cursor-pointer hover:opacity-90 transition-opacity">
-                    <img src="https://placehold.co/400x400/e8daef/ffffff?text=Foto+6" alt="Foto de galería" class="rounded-lg aspect-square object-cover cursor-pointer hover:opacity-90 transition-opacity">
-                    <img src="https://placehold.co/400x400/d6eaf8/ffffff?text=Foto+7" alt="Foto de galería" class="rounded-lg aspect-square object-cover cursor-pointer hover:opacity-90 transition-opacity">
-                    <img src="https://placehold.co/400x400/fadbd8/ffffff?text=Foto+8" alt="Foto de galería" class="rounded-lg aspect-square object-cover cursor-pointer hover:opacity-90 transition-opacity">
+                <h2 class="text-xl font-semibold text-gray-800 mb-3">Tus Fotos</h2>
+                <div id="gallery" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <!-- Las fotos guardadas aparecerán aquí -->
                 </div>
+                <p id="no-photos-msg" class="text-gray-500 text-center mt-8">No has guardado ninguna foto todavía. ¡Usa la cámara!</p>
             </div>
         </main>
     </div>
+
+    <!-- Modal de la Cámara -->
+    <div id="camera-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-3xl w-full">
+            <h2 class="text-2xl font-bold mb-4">Cámara</h2>
+            <div id="camera-container" class="relative">
+                <video id="camera-feed" class="w-full h-auto rounded-lg bg-gray-900" autoplay playsinline></video>
+                <canvas id="photo-canvas" class="hidden"></canvas>
+                <p id="camera-error" class="hidden text-red-500 text-center my-4">No se pudo acceder a la cámara. Revisa los permisos.</p>
+            </div>
+            <div class="mt-6 flex justify-center space-x-4">
+                <button id="capture-btn" class="bg-blue-500 text-white rounded-full w-20 h-20 flex items-center justify-center text-4xl shadow-lg focus:outline-none ring-4 ring-white ring-offset-2 ring-offset-gray-800">
+                    <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4 8a4 4 0 118 0 4 4 0 01-8 0zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
+                </button>
+                <button id="close-camera-btn" class="absolute top-4 right-4 bg-gray-200 text-gray-800 rounded-full w-10 h-10 flex items-center justify-center">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const openCameraBtn = document.getElementById('open-camera-btn');
+    const closeCameraBtn = document.getElementById('close-camera-btn');
+    const captureBtn = document.getElementById('capture-btn');
+    const cameraModal = document.getElementById('camera-modal');
+    const cameraFeed = document.getElementById('camera-feed');
+    const photoCanvas = document.getElementById('photo-canvas');
+    const cameraError = document.getElementById('camera-error');
+    const gallery = document.getElementById('gallery');
+    const noPhotosMsg = document.getElementById('no-photos-msg');
+    let stream = null;
+
+    const STORAGE_KEY = 'photos-app-gallery';
+
+    // Cargar fotos desde localStorage
+    function loadPhotos() {
+        const photos = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        gallery.innerHTML = '';
+        if (photos.length > 0) {
+            noPhotosMsg.classList.add('hidden');
+            photos.forEach(photoDataUrl => {
+                const img = document.createElement('img');
+                img.src = photoDataUrl;
+                img.className = "rounded-lg aspect-square object-cover cursor-pointer hover:opacity-90 transition-opacity";
+                gallery.appendChild(img);
+            });
+        } else {
+            noPhotosMsg.classList.remove('hidden');
+        }
+    }
+
+    // Guardar una foto
+    function savePhoto(dataUrl) {
+        const photos = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        photos.unshift(dataUrl); // Añadir al principio
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(photos));
+        loadPhotos();
+    }
+    
+    // Abrir la cámara
+    async function startCamera() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            cameraFeed.srcObject = stream;
+            cameraModal.classList.remove('hidden');
+            cameraError.classList.add('hidden');
+        } catch (err) {
+            console.error("Error al acceder a la cámara: ", err);
+            cameraError.classList.remove('hidden');
+        }
+    }
+
+    // Cerrar la cámara
+    function stopCamera() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+        cameraModal.classList.add('hidden');
+    }
+
+    // Capturar foto
+    captureBtn.addEventListener('click', () => {
+        const context = photoCanvas.getContext('2d');
+        photoCanvas.width = cameraFeed.videoWidth;
+        photoCanvas.height = cameraFeed.videoHeight;
+        context.drawImage(cameraFeed, 0, 0, photoCanvas.width, photoCanvas.height);
+        
+        const dataUrl = photoCanvas.toDataURL('image/png');
+        savePhoto(dataUrl);
+        stopCamera();
+    });
+
+    openCameraBtn.addEventListener('click', startCamera);
+    closeCameraBtn.addEventListener('click', stopCamera);
+
+    // Carga inicial de fotos
+    loadPhotos();
+    </script>
 </body>
 </html>
 `
