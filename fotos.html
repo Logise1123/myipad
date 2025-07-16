@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/phosphor-icons/1.4.2/css/phosphor.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-white">
+    <div class="w-full max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="py-4 px-6 border-b border-gray-200 sticky top-0 bg-white/80 backdrop-blur-sm z-10 flex justify-between items-center">
+            <h1 class="text-3xl font-bold text-gray-900">Photos</h1>
+            <button id="open-camera-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2">
+                <i class="ph ph-camera"></i>
+                Take Photo
+            </button>
+        </header>
+
+        <!-- Gallery -->
+        <main class="p-6">
+            <div>
+                <h2 class="text-xl font-semibold text-gray-800 mb-3">Your Photos</h2>
+                <div id="gallery" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <!-- Saved photos will appear here -->
+                </div>
+                <p id="no-photos-msg" class="text-gray-500 text-center mt-8">You haven't saved any photos yet. Use the camera!</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Camera Modal -->
+    <div id="camera-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div class="bg-black rounded-lg p-2 max-w-3xl w-full relative">
+            <video id="camera-feed" class="w-full h-auto rounded-lg" autoplay playsinline></video>
+            <canvas id="photo-canvas" class="hidden"></canvas>
+            <p id="camera-error" class="hidden text-red-500 text-center my-4">Could not access the camera. Please check permissions.</p>
+            
+            <div class="absolute bottom-6 left-1/2 -translate-x-1/2">
+                <button id="capture-btn" class="bg-white/90 text-black rounded-full w-20 h-20 flex items-center justify-center text-4xl shadow-lg focus:outline-none ring-4 ring-white ring-offset-2 ring-offset-gray-800"></button>
+            </div>
+            <button id="close-camera-btn" class="absolute top-4 right-4 bg-black/50 text-white rounded-full w-10 h-10 flex items-center justify-center">
+                <i class="ph ph-x text-2xl"></i>
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getDatabase, ref, onValue, push, set } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+        const openCameraBtn = document.getElementById('open-camera-btn');
+        const closeCameraBtn = document.getElementById('close-camera-btn');
+        const captureBtn = document.getElementById('capture-btn');
+        const cameraModal = document.getElementById('camera-modal');
+        const cameraFeed = document.getElementById('camera-feed');
+        const photoCanvas = document.getElementById('photo-canvas');
+        const cameraError = document.getElementById('camera-error');
+        const gallery = document.getElementById('gallery');
+        const noPhotosMsg = document.getElementById('no-photos-msg');
+        let stream = null;
+        let photosRef;
+
+        // --- Firebase Configuration ---
+        const firebaseConfig = {
+            databaseURL: "https://guessthepin-2fe64-default-rtdb.europe-west1.firebasedatabase.app/",
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        
+        photosRef = ref(db, `appdata/photos{deviceID}`);
+
+        // Load photos from Firebase
+        function loadPhotos() {
+            onValue(photosRef, (snapshot) => {
+                gallery.innerHTML = '';
+                const photos = snapshot.val();
+                if (photos) {
+                    noPhotosMsg.classList.add('hidden');
+                    // Firebase returns an object, convert to array and sort
+                    const photoArray = Object.values(photos).sort((a, b) => b.createdAt - a.createdAt);
+                    photoArray.forEach(photo => {
+                        const img = document.createElement('img');
+                        img.src = photo.dataUrl;
+                        img.className = "rounded-lg aspect-square object-cover cursor-pointer hover:opacity-90 transition-opacity";
+                        gallery.appendChild(img);
+                    });
+                } else {
+                    noPhotosMsg.classList.remove('hidden');
+                }
+            });
+        }
+
+        // Save a photo to Firebase
+        function savePhoto(dataUrl) {
+            const newPhotoRef = push(photosRef);
+            set(newPhotoRef, {
+                dataUrl: dataUrl,
+                createdAt: Date.now()
+            });
+        }
+        
+        // Open the camera
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+                cameraFeed.srcObject = stream;
+                cameraModal.classList.remove('hidden');
+                cameraError.classList.add('hidden');
+            } catch (err) {
+                console.error("Error accessing camera: ", err);
+                cameraError.classList.remove('hidden');
+            }
+        }
+
+        // Close the camera
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            cameraModal.classList.add('hidden');
+        }
+
+        // Capture photo
+        captureBtn.addEventListener('click', () => {
+            const context = photoCanvas.getContext('2d');
+            photoCanvas.width = cameraFeed.videoWidth;
+            photoCanvas.height = cameraFeed.videoHeight;
+            context.drawImage(cameraFeed, 0, 0, photoCanvas.width, photoCanvas.height);
+            
+            const dataUrl = photoCanvas.toDataURL('image/jpeg', 0.8); // Use JPEG for smaller size
+            savePhoto(dataUrl);
+            stopCamera();
+        });
+
+        openCameraBtn.addEventListener('click', startCamera);
+        closeCameraBtn.addEventListener('click', stopCamera);
+
+        // Initial load of photos
+        loadPhotos();
+    </script>
+</body>
+</html>
