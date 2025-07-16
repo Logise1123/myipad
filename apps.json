@@ -1,22 +1,22 @@
 [
   {
-    "name": "Notas",
-    "description": "Una app simple y elegante para tomar notas.",
+    "name": "Notes",
+    "description": "A simple and elegant app for taking notes.",
     "id": "notas"
   },
   {
-    "name": "Clima",
-    "description": "Consulta el tiempo en tu ubicación actual.",
+    "name": "Weather",
+    "description": "Check the weather at your current location.",
     "id": "clima"
   },
   {
-    "name": "Calculadora",
-    "description": "Una calculadora para operaciones básicas y científicas.",
+    "name": "Calculator",
+    "description": "A calculator for basic and scientific operations.",
     "id": "calc"
   },
   {
-    "name": "Fotos",
-    "description": "Explora y revive tus recuerdos.",
+    "name": "Photos",
+    "description": "Explore and relive your memories.",
     "id": "fotos"
   }
 ]
