@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #000; }
+        .calc-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9999px;
+            font-size: 2.25rem; /* 36px */
+            font-weight: 500;
+            aspect-ratio: 1 / 1;
+            transition: background-color 0.15s ease;
+            user-select: none;
+            cursor: pointer;
+        }
+        .calc-btn.active-op {
+            background-color: white;
+            color: #FF9500;
+        }
+        .calc-btn:active {
+            filter: brightness(1.2);
+        }
+        .btn-dark-gray { background-color: #333; color: white; }
+        .btn-light-gray { background-color: #A5A5A5; color: black; }
+        .btn-orange { background-color: #FF9500; color: white; }
+        .btn-zero {
+            aspect-ratio: 2 / 1;
+            justify-content: flex-start;
+            padding-left: 2rem; /* 32px */
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center h-screen">
+    <div class="w-full max-w-sm p-4 space-y-3">
+        <!-- Display -->
+        <div class="text-right text-white font-thin pr-4 mb-4 h-24 flex items-end justify-end">
+             <h1 id="display" class="text-8xl break-all">0</h1>
+        </div>
+        <!-- Buttons -->
+        <div id="buttons-container" class="grid grid-cols-4 gap-3">
+            <button class="calc-btn btn-light-gray" data-action="clear">AC</button>
+            <button class="calc-btn btn-light-gray" data-action="negate">+/-</button>
+            <button class="calc-btn btn-light-gray" data-action="percentage">%</button>
+            <button class="calc-btn btn-orange" data-action="operator" data-value="divide">÷</button>
+
+            <button class="calc-btn btn-dark-gray" data-action="number" data-value="7">7</button>
+            <button class="calc-btn btn-dark-gray" data-action="number" data-value="8">8</button>
+            <button class="calc-btn btn-dark-gray" data-action="number" data-value="9">9</button>
+            <button class="calc-btn btn-orange" data-action="operator" data-value="multiply">×</button>
+
+            <button class="calc-btn btn-dark-gray" data-action="number" data-value="4">4</button>
+            <button class="calc-btn btn-dark-gray" data-action="number" data-value="5">5</button>
+            <button class="calc-btn btn-dark-gray" data-action="number" data-value="6">6</button>
+            <button class="calc-btn btn-orange" data-action="operator" data-value="subtract">-</button>
+
+            <button class="calc-btn btn-dark-gray" data-action="number" data-value="1">1</button>
+            <button class="calc-btn btn-dark-gray" data-action="number" data-value="2">2</button>
+            <button class="calc-btn btn-dark-gray" data-action="number" data-value="3">3</button>
+            <button class="calc-btn btn-orange" data-action="operator" data-value="add">+</button>
+
+            <button class="calc-btn btn-dark-gray col-span-2 btn-zero" data-action="number" data-value="0">0</button>
+            <button class="calc-btn btn-dark-gray" data-action="decimal">.</button>
+            <button class="calc-btn btn-orange" data-action="calculate">=</button>
+        </div>
+    </div>
+    <script>
+    const display = document.getElementById('display');
+    const buttonsContainer = document.getElementById('buttons-container');
+
+    let state = {
+        displayValue: '0',
+        firstOperand: null,
+        operator: null,
+        waitingForSecondOperand: false,
+    };
+
+    function updateDisplay() {
+        let value = state.displayValue;
+        if (value.length > 9) {
+            display.textContent = parseFloat(value).toExponential(5);
+        } else {
+            const [integerPart, decimalPart] = value.split('.');
+            let formattedInteger = parseFloat(integerPart).toLocaleString('en', { maximumFractionDigits: 20 });
+            display.textContent = decimalPart != null ? `${formattedInteger}.${decimalPart}` : formattedInteger;
+        }
+    }
+
+    function inputDigit(digit) {
+        const { displayValue, waitingForSecondOperand } = state;
+        if (waitingForSecondOperand) {
+            state.displayValue = digit;
+            state.waitingForSecondOperand = false;
+        } else {
+            if (displayValue.length >= 15) return;
+            state.displayValue = displayValue === '0' ? digit : displayValue + digit;
+        }
+    }
+    
+    function inputDecimal() {
+        if (state.waitingForSecondOperand) {
+            state.displayValue = '0.';
+            state.waitingForSecondOperand = false;
+            return;
+        }
+        if (!state.displayValue.includes('.')) {
+            state.displayValue += '.';
+        }
+    }
+
+    function handleOperator(nextOperator) {
+        const { firstOperand, displayValue, operator } = state;
+        const inputValue = parseFloat(displayValue);
+
+        if (operator && state.waitingForSecondOperand) {
+            state.operator = nextOperator;
+            highlightOperator(nextOperator);
+            return;
+        }
+        
+        if (firstOperand === null && !isNaN(inputValue)) {
+            state.firstOperand = inputValue;
+        } else if (operator) {
+            const result = calculate(firstOperand, inputValue, operator);
+            state.displayValue = `${parseFloat(result.toPrecision(15))}`;
+            state.firstOperand = result;
+        }
+
+        state.waitingForSecondOperand = true;
+        state.operator = nextOperator;
+        highlightOperator(nextOperator);
+    }
+
+    function calculate(first, second, op) {
+        if (op === 'add') return first + second;
+        if (op === 'subtract') return first - second;
+        if (op === 'multiply') return first * second;
+        if (op === 'divide') {
+            if (second === 0) return 'Error';
+            return first / second;
+        }
+        return second;
+    }
+
+    function resetCalculator() {
+        state = { displayValue: '0', firstOperand: null, operator: null, waitingForSecondOperand: false };
+        highlightOperator(null);
+    }
+    
+    function highlightOperator(operatorValue) {
+        document.querySelectorAll('[data-action="operator"]').forEach(btn => {
+            if (btn.dataset.value === operatorValue) {
+                btn.classList.add('active-op');
+            } else {
+                btn.classList.remove('active-op');
+            }
+        });
+    }
+
+    buttonsContainer.addEventListener('click', (event) => {
+        const { target } = event;
+        if (!target.matches('button')) return;
+
+        const { action, value } = target.dataset;
+
+        if (action !== 'operator' && state.waitingForSecondOperand && action !== 'calculate') {
+             highlightOperator(null);
+        }
+
+        switch (action) {
+            case 'number': inputDigit(value); break;
+            case 'decimal': inputDecimal(); break;
+            case 'operator': handleOperator(value); break;
+            case 'calculate':
+                if (state.operator && state.firstOperand !== null) {
+                    handleOperator(state.operator); // Perform calculation
+                    state.waitingForSecondOperand = false;
+                    state.operator = null;
+                    highlightOperator(null);
+                }
+                break;
+            case 'clear':
+                resetCalculator();
+                target.textContent = 'AC';
+                break;
+            case 'negate':
+                if (state.displayValue !== '0') {
+                    state.displayValue = String(parseFloat(state.displayValue) * -1);
+                }
+                break;
+            case 'percentage':
+                state.displayValue = String(parseFloat(state.displayValue) / 100);
+                break;
+        }
+        
+        if (action !== 'clear') {
+            document.querySelector('[data-action="clear"]').textContent = state.displayValue !== '0' ? 'C' : 'AC';
+        }
+        
+        updateDisplay();
+    });
+    
+    updateDisplay();
+    </script>
+</body>
+</html>
