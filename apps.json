@@ -1,8 +1,8 @@
 [
   {
-    "name": "Notes",
-    "description": "A simple and elegant app for taking notes.",
-    "id": "notas"
+    "name": "MyApps",
+    "description": "Upload apps to the AppStore using this!",
+    "id": "myapps"
   },
   {
     "name": "Weather",
@@ -18,5 +18,10 @@
     "name": "Photos",
     "description": "Explore and relive your memories.",
     "id": "fotos"
+  },
+  {
+    "name": "Notes",
+    "description": "A simple and elegant app for taking notes.",
+    "id": "notas"
   }
 ]
