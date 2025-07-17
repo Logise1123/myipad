@@ -1,44 +1,32 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>My Apps</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: #111;
-      color: white;
-      font-family: sans-serif;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      text-align: center;
-    }
-
-    button {
-      padding: 12px 24px;
-      font-size: 16px;
-      margin-top: 20px;
-      background: #007aff;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    button:hover {
-      background: #005fcc;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <title>My Apps – Upload to App Store</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
-<body>
-  <h1>Para usar esta app, debes abrirla en otra pestaña</h1>
-  <button onclick="window.open('https://html-classic.itch.zone/html/14321599/index.html', '_blank')">
-    Abrir app
-  </button>
+<body class="bg-white text-gray-900 flex items-center justify-center min-h-screen px-6">
+  <div class="max-w-md text-center">
+    <div class="mb-8">
+      <h1 class="text-5xl font-extrabold tracking-tight">
+        My Apps
+      </h1>
+      <p class="mt-2 text-gray-600 text-lg">Upload your apps to the <strong>App Store</strong> easily</p>
+    </div>
+
+    <div class="bg-gray-100 p-8 rounded-2xl shadow-lg">
+      <h2 class="text-2xl font-semibold mb-4">Please open the app in a new tab</h2>
+      <p class="text-gray-700 mb-6">
+        To use this app, it must be opened separately in a new browser tab.
+      </p>
+      <button
+        onclick="window.open('https://html-classic.itch.zone/html/14321599/index.html', '_blank')"
+        class="bg-black text-white px-8 py-3 rounded-xl text-lg font-semibold hover:bg-gray-800 transition"
+      >
+        Open App
+      </button>
+    </div>
+  </div>
 </body>
 </html>
