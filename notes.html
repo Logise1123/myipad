@@ -8,7 +8,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/phosphor-icons/1.4.2/css/phosphor.min.css" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -33,7 +32,10 @@
             <div class="p-4 border-b border-gray-200 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-gray-800">Notes</h1>
                 <button id="new-note-btn" class="text-gray-500 hover:text-blue-600 p-2 rounded-full transition-colors">
-                    <i class="ph-bold ph-note-pencil text-2xl"></i>
+                    <!-- SVG Icon for New Note -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
                 </button>
             </div>
             <div id="notes-list-container" class="p-2 overflow-y-auto flex-1">
@@ -41,7 +43,10 @@
             </div>
              <div class="p-2 border-t border-gray-200">
                 <button id="delete-note-btn" class="w-full text-red-600 hover:bg-red-50 font-semibold py-2 px-4 rounded-lg text-sm text-center disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors" disabled>
-                     <i class="ph ph-trash"></i>
+                     <!-- SVG Icon for Delete -->
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
                     Delete Note
                 </button>
             </div>
@@ -53,7 +58,10 @@
                  <textarea id="note-content" class="w-full h-full p-4 text-lg bg-transparent resize-none text-gray-800" placeholder="Create a new note or select an existing one."></textarea>
             </div>
              <div id="placeholder-container" class="w-full h-full flex flex-col items-center justify-center text-gray-500">
-                <i class="ph-light ph-note-blank text-8xl"></i>
+                <!-- SVG Icon for Placeholder -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
                 <p class="mt-4 text-lg">Select a note to view it</p>
                 <p class="text-sm">Or create a new one to get started.</p>
             </div>
@@ -75,7 +83,7 @@
 
         // App State
         let activeNoteId = null;
-        let notesRef; // Reference to the notes in the database
+        let notesRef;
 
         // --- Firebase Configuration ---
         const firebaseConfig = {
@@ -84,7 +92,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         
-        // Use the deviceID placeholder for the database path
+        // Use the {deviceID} placeholder for the database path
         notesRef = ref(db, `appdata/notes{deviceID}`);
 
         // --- Firebase Listener ---
@@ -93,11 +101,11 @@
                 const notesData = snapshot.val();
                 const notes = [];
                 if (notesData) {
-                    for (const id in notesData) {
+                    Object.keys(notesData).forEach(id => {
                         notes.push({ id, ...notesData[id] });
-                    }
+                    });
                 }
-                // Sort notes by timestamp client-side
+                // Sort notes by creation date (newest first)
                 notes.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
                 renderNotesList(notes);
             }, (error) => {
@@ -107,14 +115,19 @@
 
         // --- UI Rendering ---
         function renderNotesList(notes) {
+            const lastActiveId = activeNoteId;
             notesListContainer.innerHTML = '';
             if (notes.length === 0) {
                 notesListContainer.innerHTML = '<p class="text-center text-gray-500 p-4">No notes yet.</p>';
-                 resetView();
+                resetView();
             } else {
                 notes.forEach(note => {
                     const noteElement = document.createElement('div');
-                    noteElement.className = 'note-item p-3 rounded-lg cursor-pointer mt-1 ' + (note.id === activeNoteId ? 'active' : '');
+                    noteElement.className = 'note-item p-3 rounded-lg cursor-pointer mt-1';
+                    // Mark as active if the ID matches
+                    if (note.id === lastActiveId) {
+                        noteElement.classList.add('active');
+                    }
                     noteElement.dataset.id = note.id;
 
                     const title = note.content ? note.content.split('\n')[0] : 'New Note';
@@ -139,34 +152,37 @@
             placeholderContainer.classList.remove('hidden');
         }
 
-
         // --- Note Actions ---
         function selectNote(id, content) {
             activeNoteId = id;
+            
+            // Update the active class in the list
+            document.querySelectorAll('.note-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.id === id);
+            });
+
+            // Update the editor area
             noteContent.value = content || '';
             noteContent.disabled = false;
             deleteNoteBtn.disabled = false;
             editorContainer.classList.remove('hidden');
             placeholderContainer.classList.add('hidden');
             
-            // Manually update active class
-            document.querySelectorAll('.note-item').forEach(item => {
-                item.classList.remove('active');
-                if (item.dataset.id === id) {
-                    item.classList.add('active');
-                }
-            });
             noteContent.focus();
         }
 
         newNoteBtn.addEventListener('click', () => {
+            console.log("Creating new note...");
             const newNote = {
                 content: '',
                 createdAt: Date.now()
             };
             const newNoteRef = push(notesRef);
+            
             set(newNoteRef, newNote)
                 .then(() => {
+                    console.log("Note created with ID:", newNoteRef.key);
+                    // Select the new note so the user can start typing
                     selectNote(newNoteRef.key, newNote.content);
                 })
                 .catch(error => {
@@ -192,11 +208,12 @@
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => {
                 const noteToUpdateRef = ref(db, `appdata/notes{deviceID}/${activeNoteId}`);
+                // Make sure to save both content and creation/modification date
                 set(noteToUpdateRef, {
                     content: noteContent.value,
-                    createdAt: Date.now() // Update timestamp on edit
+                    createdAt: Date.now()
                 }).catch(error => console.error("Error updating note:", error));
-            }, 500); // Debounce updates
+            }, 500); // Waits 500ms after user stops typing to save
         });
 
         // Initial Load
