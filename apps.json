@@ -23,5 +23,10 @@
     "name": "Notes",
     "description": "A simple and elegant app for taking notes.",
     "id": "notas"
+  },
+  {
+    "name": "Oguh365",
+    "description": "Es un juego de plataformas genérico: Un cubo que se desplaza con las flechas y salta con la flecha arriba (tiene gravedad). Pon varios niveles y haz que todos s...",
+    "id": "oguh365"
   }
 ]
